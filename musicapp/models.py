@@ -3,6 +3,7 @@ from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
+from datetime import datetime
 
 
 # Automatically generate a token whenever a new user is created
@@ -47,7 +48,7 @@ class Musician(models.Model):
 class Album(models.Model):
 
     title = models.CharField(max_length=500)
-    released = models.DateField()
+    released = models.IntegerField()
     band = models.ForeignKey(Band, on_delete=models.CASCADE)
 
     class Meta:
@@ -55,6 +56,12 @@ class Album(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        current_year = datetime.now().year
+        if self.released < 1900 or self.released > current_year:
+            raise ValidationError("Please, specify the correct year")
+        super(Campaign, self).save(*args, **kwargs)
 
 
 class BandMember(models.Model):
