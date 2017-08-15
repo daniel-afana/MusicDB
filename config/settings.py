@@ -41,9 +41,11 @@ DJANGO_APPS = (
 
 THIRD_PARTY_APPS = (
     'rest_framework',
+    'rest_framework.authtoken',
 )
 
 LOCAL_APPS = (
+    'musicapp',
 )
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -130,7 +132,7 @@ STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.',
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
     ],
     'PAGE_SIZE': 10,
     'DEFAULT_AUTHENTICATION_CLASSES': (
