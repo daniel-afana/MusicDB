@@ -14,5 +14,6 @@ router.register(r'band-members', local_views.BandMemberViewSet)
 
 urlpatterns = [
     url(r'^', include(router.urls)),
-    url(r'^api-token-auth/', views.obtain_auth_token),
+    # url(r'^api-token-auth/', views.obtain_auth_token),
+    url(r'^token/', local_views.obtain_expiring_auth_token),
 ]
