@@ -49,10 +49,8 @@ class MusicianSerializer(serializers.HyperlinkedModelSerializer):
 
 class AlbumSerializer(serializers.HyperlinkedModelSerializer):
 
-    released = serializers.DateField()
-
     class Meta:
         model = Album
-        fields = ('title', 'released', 'band')
+        fields = ('url', 'title', 'released', 'band')
 
 
