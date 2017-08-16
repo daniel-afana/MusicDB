@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 from datetime import datetime
+from django.core.exceptions import ValidationError
 
 
 # Automatically generate a token whenever a new user is created
@@ -61,7 +62,7 @@ class Album(models.Model):
         current_year = datetime.now().year
         if self.released < 1900 or self.released > current_year:
             raise ValidationError("Please, specify the correct year")
-        super(Campaign, self).save(*args, **kwargs)
+        super(Album, self).save(*args, **kwargs)
 
 
 class BandMember(models.Model):
