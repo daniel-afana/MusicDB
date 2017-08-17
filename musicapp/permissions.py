@@ -1,6 +1,6 @@
-from rest_framework.permissions import DjangoObjectPermissions
+from rest_framework.permissions import DjangoModelPermissions
 
-class DjangoObjectPermissionsOrAnonReadOnly(DjangoObjectPermissions):
+class DjangoModelPermissionsOrAnonReadOnly(DjangoModelPermissions):
     pass
     # Read-only rights for all users
     authenticated_users_only = False

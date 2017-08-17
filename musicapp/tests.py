@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 from rest_framework.authtoken.models import Token
 from musicapp.authentication import ExpiringTokenAuthentication
 import pdb
-from setup_user_groups import SetupGroups
+from musicapp.setup_user_groups import SetupGroups
 from django.contrib.auth.models import User, Group
 
 
@@ -386,7 +386,7 @@ class UpdateMusician(TestCaseInit, TestCaseWithUsers):
             }
         
         self.invalid_info = {
-            'first_name': 1,
+            'first_name': '',
             'last_name': 'Курочкин'
         }
 
@@ -414,6 +414,15 @@ class UpdateMusician(TestCaseInit, TestCaseWithUsers):
 
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_admin.key)
 
+        'Create a musician first'
+        self.musician_data['first_name'] = 'Anthony2'
+        self.client.post(
+            reverse('musician-list'),
+            self.musician_data,
+            format="json")
+
+        self.new_musician = Musician.objects.get(first_name='Anthony2')
+
         self.response = self.client.put(
             reverse('musician-detail', kwargs={'pk': self.new_musician.pk}),
             self.invalid_info,
@@ -431,8 +440,8 @@ class UpdateBand(TestCaseInit, TestCaseWithUsers):
         self.band_data = {'name': 'RHCP',}
 
         self.valid_info = {'name': 'Нуль',}
-        
-        self.invalid_info = {'name': 1}
+
+        self.invalid_info = {'name': ''}
 
     def test_valid_update_band(self):
 
@@ -457,6 +466,14 @@ class UpdateBand(TestCaseInit, TestCaseWithUsers):
     def test_invalid_update_band(self):
 
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_admin.key)
+
+        'Create a band first'
+        self.band_data['name'] = 'RHCPP'
+        self.client.post(
+            reverse('band-list'),
+            self.band_data,
+            format="json")
+        self.new_band = Band.objects.get(name='RHCPP')
 
         self.response = self.client.put(
             reverse('band-detail', kwargs={'pk': self.new_band.pk}),
@@ -509,10 +526,19 @@ class UpdateBandMember(TestCaseInit, TestCaseWithUsers):
             format="json"
         )
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+
     
     def test_invalid_update_band_member(self):
 
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_admin.key)
+
+        'Create a band member first'
+        self.client.post(
+            reverse('bandmember-list'),
+            self.band_member_data,
+            format="json")
+
+        self.new_bandmember = BandMember.objects.get(musician=self.musician1)
 
         self.response = self.client.put(
             reverse('bandmember-detail', kwargs={'pk': self.new_bandmember.pk}),
@@ -522,6 +548,7 @@ class UpdateBandMember(TestCaseInit, TestCaseWithUsers):
         self.assertEqual(self.response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
+
 class UpdateAlbum(TestCaseInit, TestCaseWithUsers):
 
     def setUp(self):
@@ -529,9 +556,9 @@ class UpdateAlbum(TestCaseInit, TestCaseWithUsers):
         super().setUp()
 
         self.album_data = { 
-            'title': 'Песня о безответной любви к Родине',
+            'title': 'New Album',
             'band': '/bands/{}/'.format(self.band1.pk),
-            'released': 1991
+            'released': 2001
             }
 
         self.valid_info = { 
@@ -541,30 +568,10 @@ class UpdateAlbum(TestCaseInit, TestCaseWithUsers):
             }
         
         self.invalid_info = { 
-            'title': 'Updated title',
+            'title': '',
             'band': '/bands/{}/'.format(self.band1.pk),
-            'released': 1800
+            'released': 1990
             }
-
-    def test_cannot_update_album(self):
-
-        'Manager does not have permission'
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_manager.key)
-
-        'Create an album first'
-        self.client.post(
-            reverse('album-list'),
-            self.album_data,
-            format="json")
-        
-        self.new_album = Album.objects.get(title='Песня о безответной любви к Родине')
-
-        self.response = self.client.put(
-            reverse('album-detail', kwargs={'pk':self.new_album.pk}),
-            self.valid_info,
-            format="json")
-
-        self.assertEqual(self.response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_valid_update_album(self):
 
@@ -577,18 +584,26 @@ class UpdateAlbum(TestCaseInit, TestCaseWithUsers):
             self.album_data,
             format="json")
         
-        self.new_album = Album.objects.get(title='Песня о безответной любви к Родине')
+        self.new_album = Album.objects.get(title='New Album')
 
         self.response = self.client.put(
             reverse('album-detail', kwargs={'pk':self.new_album.pk}),
             self.valid_info,
-            format="json"
-        )
+            format="json")
+
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
     
     def test_invalid_update_album(self):
 
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_admin.key)
+
+        'Create an album first'
+        self.client.post(
+            reverse('album-list'),
+            self.album_data,
+            format="json")
+
+        self.new_album = Album.objects.get(title='New Album')
 
         self.response = self.client.put(
             reverse('album-detail', kwargs={'pk': self.new_album.pk}),
@@ -596,3 +611,118 @@ class UpdateAlbum(TestCaseInit, TestCaseWithUsers):
             format="json")
         
         self.assertEqual(self.response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class DeleteMusician(TestCaseInit, TestCaseWithUsers):
+
+    def setUp(self):
+
+        super().setUp()
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_admin.key)
+
+    def test_valid_delete_musician(self):
+
+        response = self.client.delete(
+            reverse('musician-detail', kwargs={'pk':self.musician1.pk})
+        )
+        
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+    
+    def test_invalid_delete_campaign(self):
+
+        response = self.client.delete(
+            reverse('musician-detail', kwargs={'pk': 30})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class DeleteBand(TestCaseInit, TestCaseWithUsers):
+
+    def setUp(self):
+
+        super().setUp()
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_admin.key)
+
+    def test_valid_delete_band(self):
+
+        response = self.client.delete(
+            reverse('band-detail', kwargs={'pk':self.band1.pk})
+        )
+        
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+    
+    def test_invalid_delete_band(self):
+
+        response = self.client.delete(
+            reverse('band-detail', kwargs={'pk': 30})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class DeleteBandMember(TestCaseInit, TestCaseWithUsers):
+
+    def setUp(self):
+
+        super().setUp()
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token_admin.key)
+
+        self.band_member_data = { 
+            'musician': '/musicians/{}/'.format(self.musician1.pk),
+            'band': '/bands/{}/'.format(self.band1.pk),
+            'joined': '1901-01-01'
+            }
+
+    def test_valid_delete_band_member(self):
+
+        'Create a band member first'
+        self.client.post(
+            reverse('bandmember-list'),
+            self.band_member_data,
+            format="json")
+
+        self.new_bandmember = BandMember.objects.get(musician=self.musician1)
+
+        response = self.client.delete(
+            reverse('bandmember-detail', kwargs={'pk':self.new_bandmember.pk})
+        )
+        
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+    
+    def test_invalid_delete_band(self):
+
+        'Create a band member first'
+        self.client.post(
+            reverse('bandmember-list'),
+            self.band_member_data,
+            format="json")
+
+        self.new_bandmember = BandMember.objects.get(musician=self.musician1)
+
+        response = self.client.delete(
+            reverse('bandmember-detail', kwargs={'pk': 30})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class GetBandsMusicians(TestCaseInit):
+
+    def test_get_bands_musicians(self):
+        self.response = self.client.get(reverse('band-albums', kwargs={'pk': self.band1.pk}))
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+
+
+class GetBandsAlbums(TestCaseInit):
+
+    def test_get_bands_albums(self):
+        self.response = self.client.get(reverse('band-albums', kwargs={'pk': self.band1.pk}))
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)
+
+
+class FreeMusicians(TestCaseInit):
+
+    def test_get_musicians_not_in_any_band(self):
+        self.response = self.client.get(reverse('musician-free'))
+        self.assertEqual(self.response.status_code, status.HTTP_200_OK)

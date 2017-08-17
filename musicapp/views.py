@@ -69,7 +69,7 @@ class MusicianViewSet(viewsets.ModelViewSet):
     serializer_class = MusicianSerializer
 
     @list_route()
-    def notInBand(self, request):
+    def free(self, request):
 
         """
         Musicians who are not in any band
